@@ -1,0 +1,3 @@
+rootProject.name = 'SnapClone'
+
+include ':app'
