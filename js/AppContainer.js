@@ -9,13 +9,16 @@ import {
     StyleSheet,
 } from 'react-native';
 
-let Window = Dimensions.get('window');
+
 
 export default class AppContainer extends Component {
 
 	constructor(props) {
 		super(props);
-		
+			
+		let Window = Dimensions.get('window');
+		let screenWidth = Dimensions.get('window').width;
+
 		this.state = {
 			pan : new Animated.ValueXY()
 		};
@@ -29,12 +32,22 @@ export default class AppContainer extends Component {
             	dx : this.state.pan.x,
         	}]),
         	onPanResponderRelease: (e, gesture) => {
-        		 console.log("onPanResponderRelease");
-        		 
-        		 Animated.spring(
+
+        		console.log("onPanResponderRelease");
+        		
+        		debugger;
+        		if ( gesture.dx > (screenWidth/2) ){
+        			Animated.spring(
                     this.state.pan,
-                    {toValue:{x:0,y:0}}
-                ).start();
+                    	{toValue:{x:screenWidth,y:0}}
+                	).start();
+        		}else{
+        			Animated.spring(
+                    this.state.pan,
+                    	{toValue:{x:0,y:0}}
+                	).start();
+        		}
+        		
         	}
 		});
 	}	
