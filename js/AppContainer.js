@@ -11,16 +11,16 @@ import {
 
 
 
+
 export default class AppContainer extends Component {
 
 	constructor(props) {
 		super(props);
 			
-		let Window = Dimensions.get('window');
-		let screenWidth = Dimensions.get('window').width;
+		
 
 		this.state = {
-			pan : new Animated.ValueXY()
+			pan : new Animated.ValueXY(),
 		};
 
 		this.panResponder = PanResponder.create({
@@ -34,8 +34,6 @@ export default class AppContainer extends Component {
         	onPanResponderRelease: (e, gesture) => {
 
         		console.log("onPanResponderRelease");
-        		
-        		debugger;
         		if ( gesture.dx > (screenWidth/2) ){
         			Animated.spring(
                     this.state.pan,
@@ -50,18 +48,17 @@ export default class AppContainer extends Component {
         		
         	}
 		});
-	}	
-
-
+	}
 
 	render() {
+		debugger;
 		return (
 			<View style={styles.container}>
-				<View 
-					style={[styles.left]}
+				<Animated.View
+					style={[styles.left, {left : this.state.pan.x._value-screenWidth }]}
 					> 
-					<Text>left container</Text>
-				</View>
+					<Text style={[{ textAlign : 'left'}]}>left containerleft containerleft containerleft containerleft containerleft container</Text>
+				</Animated.View>
 				<Animated.View style={[styles.center, this.state.pan.getLayout()]}
 					{...this.panResponder.panHandlers}> 
 					<Text>center</Text> 
@@ -71,6 +68,9 @@ export default class AppContainer extends Component {
 	}
 }
 
+let Window = Dimensions.get('window');
+let screenWidth = Dimensions.get('window').width;
+
 let styles = StyleSheet.create({
 	container: {
     flex: 1,
@@ -78,15 +78,14 @@ let styles = StyleSheet.create({
   center: {
     flex: 1,
     backgroundColor: 'red',
-    left: 100,
   },
   left: {
     position: 'absolute',
     top:0,
-    left:0,
     bottom:0,
-    right: 0,
+    left:-screenWidth,
     backgroundColor: 'blue',
+    width: screenWidth,
   },
 });
 
