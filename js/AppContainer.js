@@ -9,6 +9,8 @@ import {
     StyleSheet,
 } from 'react-native';
 
+let Window = Dimensions.get('window');
+
 export default class AppContainer extends Component {
 
 	constructor(props) {
@@ -26,7 +28,14 @@ export default class AppContainer extends Component {
       		onPanResponderMove: Animated.event([null,{ //Step 3
             	dx : this.state.pan.x,
         	}]),
-        	onPanResponderRelease: (e, gesture) => {debugger;}
+        	onPanResponderRelease: (e, gesture) => {
+        		 console.log("onPanResponderRelease");
+        		 
+        		 Animated.spring(
+                    this.state.pan,
+                    {toValue:{x:0,y:0}}
+                ).start();
+        	}
 		});
 	}	
 
