@@ -37,13 +37,12 @@ export default class AppContainer extends Component {
         	onPanResponderRelease: (e, gesture) => {
         		//hand gesture release
         		this.handleMoveGestureRelease(e,gesture);
-        		console.log( "onPanResponderRelease",screenWidth, gesture.dx );
         	}
 		});
 	}
 
 	handleMoveGesture(e, gesture) {
-		console.log('handleMoveGesture');
+		console.log('handleMoveGesture',this.state.currentView);
 		let {center, left} = this.state.offset;
 		switch (this.state.currentView){
       				case CurrentView.Center : 
@@ -51,42 +50,61 @@ export default class AppContainer extends Component {
 	      				left.setValue(gesture.dx-screenWidth);
 	      				break;
 	      			case CurrentView.Left :
+	      				center.setValue(screenWidth+gesture.dx);
+	      				left.setValue(gesture.dx);
 	      				break;
       			}    
 	}
 
 	handleMoveGestureRelease(e, gesture) {
+		console.log('handleMoveGestureRelease',this.state.currentView);
 		let {center, left} = this.state.offset;
+		let slideCurrentView = !!(Math.abs(gesture.dx) > (screenWidth/2));
+		console.log('slideCurrentView',slideCurrentView);
 		switch (this.state.currentView){
         			case CurrentView.Center :
-        				if ( gesture.dx > (screenWidth/2) ){
+	        			if ( slideCurrentView ){
+	        				this.loadLeftView();
+		        		}else{
+		        			this.loadCenterView();
+		        		}
+	        		break;
 
-		        			console.log('change current, slide');
-		        			Animated.spring(
-		                    center,
-		                    	{toValue:screenWidth}
-		                	).start();
-		                	Animated.spring(
-		                    left,
-		                    	{toValue:0}
-		                	).start();
-		                	this.setState({currentView : CurrentView.left});
-	        		}else{
-	        			console.log('current is same, slide back');
-	        			Animated.spring(
-	                    center,
-	                    	{toValue:0}
-	                	).start();
-
-	                	Animated.spring(
-	                    left,
-	                    {toValue:-screenWidth}
-	                	).start();
-	        		}
+	        		case CurrentView.Left :
+	        			if ( slideCurrentView && gesture.dx < 0 ) {
+	        				this.loadCenterView();
+	        			}else{
+		        			this.loadLeftView();
+	        			}
 	        		break;
         		}
 	}
 
+	loadLeftView() {
+		let {center, left} = this.state.offset;
+		Animated.spring(
+			center,
+			{toValue:screenWidth}
+		).start();
+		Animated.spring(
+			left,
+			{toValue:0}
+		).start();
+		this.setState({currentView : CurrentView.Left});
+	}
+
+	loadCenterView() {
+		let {center, left} = this.state.offset;
+		Animated.spring(
+		    center,
+		    {toValue:0}
+		).start();
+		Animated.spring(
+		    left,
+		    {toValue:-screenWidth}
+		).start();
+		this.setState({currentView : CurrentView.Center});
+	}
 
 	listener() {
 		console.log('aaa');
