@@ -63,19 +63,11 @@ export default class AppContainer extends Component {
 		console.log('slideCurrentView',slideCurrentView);
 		switch (this.state.currentView){
         			case CurrentView.Center :
-	        			if ( slideCurrentView ){
-	        				this.loadLeftView();
-		        		}else{
-		        			this.loadCenterView();
-		        		}
+	        			slideCurrentView ? this.loadLeftView() : this.loadCenterView();
 	        		break;
 
 	        		case CurrentView.Left :
-	        			if ( slideCurrentView && gesture.dx < 0 ) {
-	        				this.loadCenterView();
-	        			}else{
-		        			this.loadLeftView();
-	        			}
+	        			(slideCurrentView && gesture.dx < 0 ) ? this.loadCenterView() : this.loadLeftView();
 	        		break;
         		}
 	}
