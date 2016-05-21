@@ -20,6 +20,7 @@ export default class AppContainer extends Component {
 			offset : {
 				center : new Animated.Value(0),
 				left : new Animated.Value(0),
+				right : new Animated.Value(screenWidth),
 			},
 			currentView : CurrentView.Center,
 		};
@@ -43,15 +44,20 @@ export default class AppContainer extends Component {
 
 	handleMoveGesture(e, gesture) {
 		console.log('handleMoveGesture',this.state.currentView);
-		let {center, left} = this.state.offset;
+		let {center, left, right} = this.state.offset;
 		switch (this.state.currentView){
       				case CurrentView.Center : 
 	      				center.setValue(gesture.dx);
 	      				left.setValue(gesture.dx-screenWidth);
+	      				right.setValue(screenWidth+gesture.dx);
 	      				break;
 	      			case CurrentView.Left :
 	      				center.setValue(screenWidth+gesture.dx);
 	      				left.setValue(gesture.dx);
+	      				break;
+	      			case CurrentView.Right :
+	      				center.setValue(-screenWidth+gesture.dx);
+	      				right.setValue(gesture.dx);	
 	      				break;
       			}    
 	}
@@ -63,12 +69,16 @@ export default class AppContainer extends Component {
 		console.log('slideCurrentView',slideCurrentView);
 		switch (this.state.currentView){
         			case CurrentView.Center :
-	        			slideCurrentView ? this.loadLeftView() : this.loadCenterView();
-	        		break;
+	        			slideCurrentView ? ((gesture.dx > 0) ? this.loadLeftView() :  this.loadRightView()  ) : this.loadCenterView();
+	        			break;
 
 	        		case CurrentView.Left :
 	        			(slideCurrentView && gesture.dx < 0 ) ? this.loadCenterView() : this.loadLeftView();
-	        		break;
+	        			break;
+
+	        		case CurrentView.Right : 
+	        			(slideCurrentView && gesture.dx > 0 ) ? this.loadCenterView() : this.loadRightView();
+	        			break;
         		}
 	}
 
@@ -86,7 +96,7 @@ export default class AppContainer extends Component {
 	}
 
 	loadCenterView() {
-		let {center, left} = this.state.offset;
+		let {center, left, right} = this.state.offset;
 		Animated.spring(
 		    center,
 		    {toValue:0}
@@ -95,7 +105,24 @@ export default class AppContainer extends Component {
 		    left,
 		    {toValue:-screenWidth}
 		).start();
+		Animated.spring(
+		    right,
+		    {toValue:screenWidth}
+		).start();
 		this.setState({currentView : CurrentView.Center});
+	}
+
+	loadRightView() {
+		let {center, left, right} = this.state.offset;
+		Animated.spring(
+		    center,
+		    {toValue:-screenWidth}
+		).start();
+		Animated.spring(
+		    right,
+		    {toValue:0}
+		).start();
+		this.setState({currentView : CurrentView.Right});
 	}
 
 	listener() {
@@ -103,7 +130,7 @@ export default class AppContainer extends Component {
 	}
 
 	render() {
-		let {center, left} = this.state.offset;
+		let {center, left, right} = this.state.offset;
 		console.log(this.state.pulledView,"pulled view");
 		return (
 			<View style={styles.container}>
@@ -116,6 +143,10 @@ export default class AppContainer extends Component {
 				<Animated.View style={[styles.center, { left : center }]}
 					{...this.panResponder.panHandlers}> 
 					<Text>center</Text> 
+				</Animated.View>
+				<Animated.View style={[styles.right, { left : right }]}
+					{...this.panResponder.panHandlers}> 
+					<Text>right view right viewright viewright viewright view</Text> 
 				</Animated.View>
 			</View>
 		);
@@ -141,5 +172,13 @@ let styles = StyleSheet.create({
     backgroundColor: 'blue',
     width: screenWidth,
   },
+  right:{
+  	position: 'absolute',
+    top:0,
+    bottom:0,
+    left:screenWidth,
+    backgroundColor: 'green',
+    width: screenWidth,
+  }
 });
 
