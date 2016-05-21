@@ -21,6 +21,7 @@ export default class AppContainer extends Component {
 
 		this.state = {
 			pan : new Animated.ValueXY(),
+			pulledView : new Animated.Value(0),
 		};
 
 		this.panResponder = PanResponder.create({
@@ -28,36 +29,56 @@ export default class AppContainer extends Component {
         	return Math.abs(gestureState.dx) > Math.abs(gestureState.dy)
                && Math.abs(gestureState.dx) > 10
       		},
-      		onPanResponderMove: Animated.event([null,{ //Step 3
-            	dx : this.state.pan.x,
-        	}]),
+      		onPanResponderMove: (e, gesture) => {
+      			this.state.pan.setValue({x:gesture.dx, y:0});
+      			this.state.pulledView.setValue(gesture.dx-screenWidth);
+      			console.log(this.state.pan,this.state.pulledView,"on");
+      		},
         	onPanResponderRelease: (e, gesture) => {
 
-        		console.log("onPanResponderRelease");
+        		console.log( "onPanResponderRelease",screenWidth, gesture.dx );
         		if ( gesture.dx > (screenWidth/2) ){
+
+        			console.log('change current, slide');
         			Animated.spring(
                     this.state.pan,
                     	{toValue:{x:screenWidth,y:0}}
                 	).start();
+                	Animated.spring(
+                    this.state.pulledView,
+                    	{toValue:0}
+                	).start();
+
         		}else{
+
+        			console.log('current is same, slide back')
         			Animated.spring(
                     this.state.pan,
                     	{toValue:{x:0,y:0}}
                 	).start();
+                	Animated.spring(
+                    this.state.pulledView,
+                    {toValue:-screenWidth}
+                	).start();
+
         		}
         		
         	}
 		});
 	}
 
+	listener() {
+		console.log('aaa');
+	}
+
 	render() {
-		debugger;
+		console.log(this.state.pulledView,"pulled view");
 		return (
 			<View style={styles.container}>
 				<Animated.View
-					style={[styles.left, {left : this.state.pan.x._value-screenWidth }]}
+					style={[ styles.left, { left : this.state.pulledView } ]}
 					> 
-					<Text style={[{ textAlign : 'left'}]}>left containerleft containerleft containerleft containerleft containerleft container</Text>
+					<Text>left containerleft containerleft containerleft containerleft containerleft container</Text>
 				</Animated.View>
 				<Animated.View style={[styles.center, this.state.pan.getLayout()]}
 					{...this.panResponder.panHandlers}> 
@@ -83,7 +104,7 @@ let styles = StyleSheet.create({
     position: 'absolute',
     top:0,
     bottom:0,
-    left:-screenWidth,
+    left:0,
     backgroundColor: 'blue',
     width: screenWidth,
   },
