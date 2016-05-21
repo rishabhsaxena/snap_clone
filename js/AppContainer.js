@@ -45,34 +45,36 @@ export default class AppContainer extends Component {
         	onPanResponderRelease: (e, gesture) => {
 
         		console.log( "onPanResponderRelease",screenWidth, gesture.dx );
-        		if ( gesture.dx > (screenWidth/2) ){
+        		switch (this.state.currentView){
+        			case CurrentView.Center :
+        				if ( gesture.dx > (screenWidth/2) ){
 
-        			console.log('change current, slide');
-        			Animated.spring(
-                    this.state.offset.center,
-                    	{toValue:screenWidth}
-                	).start();
-                	Animated.spring(
-                    this.state.offset.left,
-                    	{toValue:0}
-                	).start();
+		        			console.log('change current, slide');
+		        			Animated.spring(
+		                    this.state.offset.center,
+		                    	{toValue:screenWidth}
+		                	).start();
+		                	Animated.spring(
+		                    this.state.offset.left,
+		                    	{toValue:0}
+		                	).start();
+		                	this.setState({currentView : CurrentView.left});
+	        		}else{
 
-        		}else{
+	        			console.log('current is same, slide back');
+	        			Animated.spring(
+	                    this.state.offset.center,
+	                    	{toValue:0}
+	                	).start();
 
-        			console.log('current is same, slide back');
-        			Animated.spring(
-                    this.state.offset.center,
-                    	{toValue:0}
-                	).start();
-
-                	Animated.spring(
-                    this.state.offset.left,
-                    {toValue:-screenWidth}
-                	).start();
-
-                	this.setState({currentView : CurrentView.left});
-
+	                	Animated.spring(
+	                    this.state.offset.left,
+	                    {toValue:-screenWidth}
+	                	).start();
+	        		}
+	        		break;
         		}
+        		
         		
         	}
 		});
