@@ -9,9 +9,6 @@ import {
     StyleSheet,
 } from 'react-native';
 
-
-
-
 export default class AppContainer extends Component {
 
 	constructor(props) {
@@ -21,14 +18,24 @@ export default class AppContainer extends Component {
 				center : new Animated.Value(0),
 				left : new Animated.Value(0),
 				right : new Animated.Value(screenWidth),
+				centerVer : new Animated.Value(0),
+				top : new Animated.Value(screenHeight),
 			},
 			currentView : CurrentView.Center,
+			swipeType : SwipeType.Horizontal,
 		};
 
 		this.panResponder = PanResponder.create({
 			onMoveShouldSetPanResponder: (evt, gestureState) => {
-        	return Math.abs(gestureState.dx) > Math.abs(gestureState.dy)
-               && Math.abs(gestureState.dx) > 10
+				if ( Math.abs(gestureState.dx) > 10 && (Math.abs(gestureState.dx) > Math.abs(gestureState.dy))){
+					this.setState({ swipeType : SwipeType.Horizontal});
+					return true;
+				}
+				if ( Math.abs(gestureState.dy) > 10 && (Math.abs(gestureState.dx) < Math.abs(gestureState.dy))){
+					this.setState({ swipeType : SwipeType.Vertical});
+					return true;
+				}
+	        	return false;
       		},
       		onPanResponderMove: (e, gesture) => {
       			//handle move gesture
@@ -44,20 +51,38 @@ export default class AppContainer extends Component {
 
 	handleMoveGesture(e, gesture) {
 		console.log('handleMoveGesture',this.state.currentView);
-		let {center, left, right} = this.state.offset;
+		console.log ( gesture.dy, "vertical", this.state.swipeType, 'swipetype')
+		let {center, left, right, top, centerVer} = this.state.offset;
 		switch (this.state.currentView){
       				case CurrentView.Center : 
-	      				center.setValue(gesture.dx);
-	      				left.setValue(gesture.dx-screenWidth);
-	      				right.setValue(screenWidth+gesture.dx);
+	      				
+	      				if ( this.state.swipeType === SwipeType.Horizontal ){
+	      					center.setValue(gesture.dx);
+	      					left.setValue(gesture.dx-screenWidth);
+	      					right.setValue(screenWidth+gesture.dx);
+	      				}
+	      				if ( this.state.swipeType === SwipeType.Vertical ){
+	      					top.setValue(gesture.dy-screenHeight);
+	      					centerVer.setValue(gesture.dy);
+	      				}
 	      				break;
 	      			case CurrentView.Left :
-	      				center.setValue(screenWidth+gesture.dx);
-	      				left.setValue(gesture.dx);
+	      				if ( this.state.swipeType === SwipeType.Horizontal ){
+		      				center.setValue(screenWidth+gesture.dx);
+		      				left.setValue(gesture.dx);
+		      			}
 	      				break;
 	      			case CurrentView.Right :
-	      				center.setValue(-screenWidth+gesture.dx);
-	      				right.setValue(gesture.dx);	
+	      				if ( this.state.swipeType === SwipeType.Horizontal ){
+		      				center.setValue(-screenWidth+gesture.dx);
+		      				right.setValue(gesture.dx);	
+	      				}
+	      				break;
+	      			case CurrentView.Top :
+	      				if ( this.state.swipeType === SwipeType.Vertical ){
+	      					top.setValue(gesture.dy);
+	      					centerVer.setValue(screenHeight+gesture.dy);
+	      				}
 	      				break;
       			}    
 	}
@@ -65,19 +90,42 @@ export default class AppContainer extends Component {
 	handleMoveGestureRelease(e, gesture) {
 		console.log('handleMoveGestureRelease',this.state.currentView);
 		let {center, left} = this.state.offset;
-		let slideCurrentView = !!(Math.abs(gesture.dx) > (screenWidth/2));
+		let slideCurrentView = function() {
+			if ( this.state.swipeType === SwipeType.Horizontal && (Math.abs(gesture.dx) > (screenWidth/2))){
+				return true;
+			}else if ( this.state.swipeType === SwipeType.Vertical && (Math.abs(gesture.dy) > (screenHeight/2))){
+				return true;
+			}else {
+				return false;
+			} 
+			
+		}
+
 		console.log('slideCurrentView',slideCurrentView);
 		switch (this.state.currentView){
         			case CurrentView.Center :
-	        			slideCurrentView ? ((gesture.dx > 0) ? this.loadLeftView() :  this.loadRightView()  ) : this.loadCenterView();
+        				if ( this.state.swipeType === SwipeType.Horizontal  ){
+	        				slideCurrentView ? ((gesture.dx > 0) ? this.loadLeftView() :  this.loadRightView()  ) : this.loadCenterView();
+        				}
+        				if ( this.state.swipeType === SwipeType.Vertical ){
+        					(slideCurrentView && gesture.dy > 0 ) ? this.loadTopView() : this.loadCenterView();
+        				}
 	        			break;
 
 	        		case CurrentView.Left :
-	        			(slideCurrentView && gesture.dx < 0 ) ? this.loadCenterView() : this.loadLeftView();
+	        			if ( this.state.swipeType === SwipeType.Horizontal  ){
+	        				(slideCurrentView && gesture.dx < 0 ) ? this.loadCenterView() : this.loadLeftView();
+	        			}
 	        			break;
 
 	        		case CurrentView.Right : 
-	        			(slideCurrentView && gesture.dx > 0 ) ? this.loadCenterView() : this.loadRightView();
+	        			if ( this.state.swipeType === SwipeType.Horizontal  ){
+	        				(slideCurrentView && gesture.dx > 0 ) ? this.loadCenterView() : this.loadRightView();
+	        			}
+	        			break;
+
+	        		case CurrentView.Top :
+	        			(slideCurrentView && gesture.dy < 0) ? this.loadCenterView() :this.loadTopView();
 	        			break;
         		}
 	}
@@ -96,7 +144,7 @@ export default class AppContainer extends Component {
 	}
 
 	loadCenterView() {
-		let {center, left, right} = this.state.offset;
+		let {center, left, right, top, centerVer} = this.state.offset;
 		Animated.spring(
 		    center,
 		    {toValue:0}
@@ -108,6 +156,14 @@ export default class AppContainer extends Component {
 		Animated.spring(
 		    right,
 		    {toValue:screenWidth}
+		).start();
+		Animated.spring(
+		    top,
+		    {toValue:-screenHeight}
+		).start();
+		Animated.spring(
+		    centerVer,
+		    {toValue:0}
 		).start();
 		this.setState({currentView : CurrentView.Center});
 	}
@@ -125,12 +181,25 @@ export default class AppContainer extends Component {
 		this.setState({currentView : CurrentView.Right});
 	}
 
+	loadTopView() {
+		let {top, centerVer} = this.state.offset;
+		Animated.spring(
+		    centerVer,
+		    {toValue:screenHeight}
+		).start();
+		Animated.spring(
+		    top,
+		    {toValue:0}
+		).start();
+		this.setState({currentView : CurrentView.Top});
+	}
+
 	listener() {
 		console.log('aaa');
 	}
 
 	render() {
-		let {center, left, right} = this.state.offset;
+		let {center, left, right, top, centerVer} = this.state.offset;
 		console.log(this.state.pulledView,"pulled view");
 		return (
 			<View style={styles.container}>
@@ -140,7 +209,7 @@ export default class AppContainer extends Component {
 					> 
 					<Text>left containerleft containerleft containerleft containerleft containerleft container</Text>
 				</Animated.View>
-				<Animated.View style={[styles.center, { left : center }]}
+				<Animated.View style={[styles.center, { left : center, top : centerVer }]}
 					{...this.panResponder.panHandlers}> 
 					<Text>center</Text> 
 				</Animated.View>
@@ -148,14 +217,20 @@ export default class AppContainer extends Component {
 					{...this.panResponder.panHandlers}> 
 					<Text>right view right viewright viewright viewright view</Text> 
 				</Animated.View>
+				<Animated.View style={[styles.top, { top : top }]}
+					{...this.panResponder.panHandlers}> 
+					<Text>top view</Text> 
+				</Animated.View>
 			</View>
 		);
 	}
 }
 
 const CurrentView = { Center : 'center', Left : 'left', Right : 'right', Top : 'top' };
+const SwipeType = { Vertical : 'vertical', Horizontal : 'horizontal' };
 let Window = Dimensions.get('window');
 let screenWidth = Dimensions.get('window').width;
+let screenHeight = Dimensions.get('window').height;
 let styles = StyleSheet.create({
 	container: {
     flex: 1,
@@ -179,6 +254,14 @@ let styles = StyleSheet.create({
     left:screenWidth,
     backgroundColor: 'green',
     width: screenWidth,
+  },
+  top : {
+  	position: 'absolute',
+    top: -screenHeight,
+    left: 0,
+    right: 0,
+    backgroundColor: 'cyan',
+    height: screenHeight,
   }
 });
 
