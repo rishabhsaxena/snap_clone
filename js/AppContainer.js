@@ -19,7 +19,7 @@ export default class AppContainer extends Component {
 				left : new Animated.Value(0),
 				right : new Animated.Value(screenWidth),
 				centerVer : new Animated.Value(0),
-				top : new Animated.Value(screenHeight),
+				top : new Animated.Value(-screenHeight),
 			},
 			currentView : CurrentView.Center,
 			swipeType : SwipeType.Horizontal,
@@ -92,14 +92,15 @@ export default class AppContainer extends Component {
 		let {center, left} = this.state.offset;
 		let slideCurrentView = function() {
 			if ( this.state.swipeType === SwipeType.Horizontal && (Math.abs(gesture.dx) > (screenWidth/2))){
+				console.log('slideCurrentView',this.state.swipeType ,Math.abs(gesture.dx),screenWidth/2);
 				return true;
-			}else if ( this.state.swipeType === SwipeType.Vertical && (Math.abs(gesture.dy) > (screenHeight/2))){
+			}else if ( this.state.swipeType === SwipeType.Vertical && (Math.abs(gesture.dy) > (screenHeight/2))){				
+				console.log('slideCurrentView_ver',this.state.swipeType ,Math.abs(gesture.dy),screenHeight/2);
 				return true;
 			}else {
 				return false;
-			} 
-			
-		}
+			}
+		}.call(this); 
 
 		console.log('slideCurrentView',slideCurrentView);
 		switch (this.state.currentView){
@@ -200,7 +201,6 @@ export default class AppContainer extends Component {
 
 	render() {
 		let {center, left, right, top, centerVer} = this.state.offset;
-		console.log(this.state.pulledView,"pulled view");
 		return (
 			<View style={styles.container}>
 				<Animated.View
