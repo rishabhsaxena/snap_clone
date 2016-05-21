@@ -16,9 +16,6 @@ export default class AppContainer extends Component {
 
 	constructor(props) {
 		super(props);
-			
-		
-
 		this.state = {
 			offset : {
 				center : new Animated.Value(0),
@@ -33,68 +30,80 @@ export default class AppContainer extends Component {
                && Math.abs(gestureState.dx) > 10
       		},
       		onPanResponderMove: (e, gesture) => {
-      			switch (this.state.currentView){
+      			//handle move gesture
+      			this.handleMoveGesture(e,gesture);
+      			  			
+      		},
+        	onPanResponderRelease: (e, gesture) => {
+        		//hand gesture release
+        		this.handleMoveGestureRelease(e,gesture);
+        		console.log( "onPanResponderRelease",screenWidth, gesture.dx );
+        	}
+		});
+	}
+
+	handleMoveGesture(e, gesture) {
+		console.log('handleMoveGesture');
+		let {center, left} = this.state.offset;
+		switch (this.state.currentView){
       				case CurrentView.Center : 
-	      				this.state.offset.center.setValue(gesture.dx);
-	      				this.state.offset.left.setValue(gesture.dx-screenWidth);
+	      				center.setValue(gesture.dx);
+	      				left.setValue(gesture.dx-screenWidth);
 	      				break;
 	      			case CurrentView.Left :
 	      				break;
-      			}      			
-      		},
-        	onPanResponderRelease: (e, gesture) => {
+      			}    
+	}
 
-        		console.log( "onPanResponderRelease",screenWidth, gesture.dx );
-        		switch (this.state.currentView){
+	handleMoveGestureRelease(e, gesture) {
+		let {center, left} = this.state.offset;
+		switch (this.state.currentView){
         			case CurrentView.Center :
         				if ( gesture.dx > (screenWidth/2) ){
 
 		        			console.log('change current, slide');
 		        			Animated.spring(
-		                    this.state.offset.center,
+		                    center,
 		                    	{toValue:screenWidth}
 		                	).start();
 		                	Animated.spring(
-		                    this.state.offset.left,
+		                    left,
 		                    	{toValue:0}
 		                	).start();
 		                	this.setState({currentView : CurrentView.left});
 	        		}else{
-
 	        			console.log('current is same, slide back');
 	        			Animated.spring(
-	                    this.state.offset.center,
+	                    center,
 	                    	{toValue:0}
 	                	).start();
 
 	                	Animated.spring(
-	                    this.state.offset.left,
+	                    left,
 	                    {toValue:-screenWidth}
 	                	).start();
 	        		}
 	        		break;
         		}
-        		
-        		
-        	}
-		});
 	}
+
 
 	listener() {
 		console.log('aaa');
 	}
 
 	render() {
+		let {center, left} = this.state.offset;
 		console.log(this.state.pulledView,"pulled view");
 		return (
 			<View style={styles.container}>
 				<Animated.View
-					style={[ styles.left, { left : this.state.offset.left } ]}
+					style={[ styles.left, { left : left } ]}
 					{...this.panResponder.panHandlers}
 					> 
 					<Text>left containerleft containerleft containerleft containerleft containerleft container</Text>
 				</Animated.View>
-				<Animated.View style={[styles.center, { left : this.state.offset.center }]}
+				<Animated.View style={[styles.center, { left : center }]}
 					{...this.panResponder.panHandlers}> 
 					<Text>center</Text> 
 				</Animated.View>
